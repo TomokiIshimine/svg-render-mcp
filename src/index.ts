@@ -7,72 +7,73 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
 
-// 現在のディレクトリを取得
+// Get the current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// MCPサーバーのインスタンスを作成
+// Create an MCP server instance for rendering SVG to PNG images
 const server = new McpServer({
   name: "SVG Renderer",
-  version: "1.0.0"
+  version: "1.0.0",
+  description: "A service that renders SVG content to PNG images with customizable dimensions and background color."
 });
 
-// SVGをレンダリングするツールを追加
+// Add a tool to render SVG content to PNG images with customizable settings
 server.tool(
   "renderSvg",
   {
-    svg: z.string().describe("SVG文字列"),
-    width: z.number().optional().describe("出力画像の幅"),
-    height: z.number().optional().describe("出力画像の高さ"),
-    background: z.string().optional().describe("背景色（例：#ffffff）")
+    svg: z.string().describe("SVG string content to render (SVG文字列)"),
+    width: z.number().optional().describe("Output image width in pixels (出力画像の幅)"),
+    height: z.number().optional().describe("Output image height in pixels (出力画像の高さ)"),
+    background: z.string().optional().describe("Background color, e.g. #ffffff (背景色)")
   },
   async (args, _extra) => {
     try {
       const { svg, width, height, background } = args;
       
-      // 一時ファイルの場所を作成
+      // Create a directory for temporary files
       const tmpDir = path.resolve(__dirname, "..", "tmp");
       
-      // ディレクトリが存在しなければ作成
+      // Create the directory if it doesn't exist
       try {
         await fs.mkdir(tmpDir, { recursive: true });
       } catch (err) {
-        // ディレクトリが既に存在する場合は無視
+        // Ignore if directory already exists
       }
       
-      // 一意のファイル名を生成
+      // Generate unique filenames
       const id = randomUUID();
       const svgPath = path.join(tmpDir, `${id}.svg`);
       const pngPath = path.join(tmpDir, `${id}.png`);
       
-      // SVGファイルを書き込み
+      // Write SVG content to file
       await fs.writeFile(svgPath, svg);
       
-      // SVGをPNGに変換
+      // Convert SVG to PNG
       const pipeline = sharp(svgPath);
       
-      // リサイズオプションを設定
+      // Apply resize options if both width and height are specified
       if (width && height) {
         pipeline.resize(width, height);
       }
       
-      // 背景色を設定
+      // Apply background color if specified
       if (background) {
         pipeline.flatten({ background });
       }
       
-      // PNGとして保存
+      // Save as PNG
       await pipeline.png().toFile(pngPath);
       
-      // PNGをBase64として読み込み
+      // Read PNG as Base64
       const imageBuffer = await fs.readFile(pngPath);
       const base64Image = imageBuffer.toString("base64");
       
-      // 一時ファイルを削除
+      // Clean up temporary files
       await fs.unlink(svgPath).catch(() => {});
       await fs.unlink(pngPath).catch(() => {});
       
-      // 画像をBase64で返す
+      // Return the image as Base64
       return {
         content: [
           {
@@ -83,17 +84,18 @@ server.tool(
         ]
       };
     } catch (err) {
-      console.error("SVGレンダリングエラー:", err);
+      console.error("SVG rendering error:", err);
+      // Return error message if rendering fails
       return {
         content: [{ 
           type: "text", 
-          text: `エラーが発生しました: ${err instanceof Error ? err.message : String(err)}` 
+          text: `Error occurred: ${err instanceof Error ? err.message : String(err)}` 
         }]
       };
     }
   }
 );
 
-// 標準入出力を通じてメッセージを受信・送信
+// Connect to standard I/O for message exchange
 const transport = new StdioServerTransport();
 await server.connect(transport);
