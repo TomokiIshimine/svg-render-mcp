@@ -1,0 +1,26 @@
+{
+  "name": "svg-render-mcp",
+  "version": "1.0.0",
+  "description": "Simple MCP server",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "svg-render-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "start": "node build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "sharp": "^0.33.5",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
+}
