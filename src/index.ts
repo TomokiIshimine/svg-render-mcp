@@ -22,10 +22,10 @@ const server = new McpServer({
 server.tool(
   "renderSvg",
   {
-    svg: z.string().describe("SVG string content to render (SVG文字列)"),
-    width: z.number().optional().describe("Output image width in pixels (出力画像の幅)"),
-    height: z.number().optional().describe("Output image height in pixels (出力画像の高さ)"),
-    background: z.string().optional().describe("Background color, e.g. #ffffff (背景色)")
+    svg: z.string().describe("SVG string content to render."),
+    width: z.number().optional().describe("Output image width in pixels."),
+    height: z.number().optional().describe("Output image height in pixels."),
+    background: z.string().optional().describe("Background color, e.g. #ffffff.")
   },
   async (args, _extra) => {
     try {
